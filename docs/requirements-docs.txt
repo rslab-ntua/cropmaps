@@ -1,0 +1,12 @@
+pandas
+sentinelsat
+geopandas
+rasterio
+scikit-learn
+coloredlogs
+sphinx
+sphinxcontrib-apidoc
+sphinxcontrib-napoleon
+sphinx_rtd_theme
+myst_parser
+sphinxemoji

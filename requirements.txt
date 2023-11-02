@@ -1,0 +1,6 @@
+pandas
+sentinelsat
+geopandas
+rasterio
+scikit-learn
+coloredlogs
