@@ -43,8 +43,8 @@ For all the above see the following Python lines:
 ```python
 AOI = "/home/eouser/uth/Cap_Bon/AOI/AOI.geojson"
 
-user = "mago.creodias"
-password = "TESTing.11"
+user = "****"
+password = "****"
 start_date = "20210910"
 end_date = "20220910"
 ```
