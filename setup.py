@@ -8,7 +8,7 @@ with open('requirements.txt') as f:
 
 setuptools.setup(
     name = "cropmaps",
-    version = "0.0.1.beta",
+    version = "0.0.1.a0",
     author = "Alekos Falagas",
     author_email = "alek.falagas@gmail.com",
     description = "Crop type mapping toolbox.",

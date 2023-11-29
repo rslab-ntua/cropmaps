@@ -17,7 +17,7 @@ logging = logger.setup(name = __name__)
 class Clipper():
 
     @staticmethod
-    def clipByMask(image, shapefile, store = None, band = None, new = None, resize = False, method = None, ext = 'tif', verbose = False):
+    def clipByMask(image, shapefile, store = None, band = None, new = None, resize = False, method = None, ext = 'tif', verbose = False, compress = False):
         """Mask image based on a shapefile mask.
         
         Args:
@@ -158,6 +158,8 @@ class Clipper():
                         "driver": "GTiff",
                         "nodata": nodata
                         })
+                    if compress:
+                        metadata.update({"compress": "lzw"})                    
 
                     with rasterio.open(out_tif, 'w', **metadata) as dst:
                         dst.write(reproj_array)
@@ -183,6 +185,8 @@ class Clipper():
                                         "width": out_image.shape[2],
                                         "transform": out_transform,
                                         "nodata": nodata})
+                        if compress:
+                            out_meta.update({"compress": "lzw"})                    
                     
                     with rasterio.open(out_tif, "w", **out_meta) as output_image:
                         output_image.write(out_image)

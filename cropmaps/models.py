@@ -88,10 +88,11 @@ def fill_confMatrix(ct:pd.DataFrame, labels:List)->pd.DataFrame:
     Returns:
         pd.DataFrame: Filled confusion matrix
     """
-    rowColIdx = list(labels) + ['All']
+    labels = [str(l) for l in labels]
+    rowColIdx = labels + ['All']
     # Usefull when rows are missing
     notAlabel = [val for val in list(ct.index) if val not in rowColIdx]
-    if len(ct.index) < len(rowColIdx) or len(notAlabel)>0:
+    if len(ct.index) < len(rowColIdx) or len(notAlabel) > 0:
         for label in labels:
             if label not in ct.index:
                 ct.loc[label] = [0] * ct.shape[1]
@@ -109,13 +110,11 @@ def fill_confMatrix(ct:pd.DataFrame, labels:List)->pd.DataFrame:
 
     # Add producer accuracy
     pa = [round(ct.loc[rvcd][rvcd] / ct.loc[rvcd]['All'] *100, 2) for rvcd in labels]
-    pa = [0 if math.isnan(x) else x for x in pa]
     pa.append(round(np.nanmean(pa), 2))   # total PA
     ct['PA'] = pa
 
     # Add User acc
     ua = [round(ct.loc[rvcd][rvcd] / ct.loc['All'][rvcd] * 100, 2) for rvcd in labels]
-    ua = [0 if math.isnan(x) else x for x in ua]
     ua.append(round(np.nanmean(ua), 2))   # total UA
 
     # Overall acc
@@ -128,7 +127,6 @@ def fill_confMatrix(ct:pd.DataFrame, labels:List)->pd.DataFrame:
     f1 = [round(
         (2*ct.loc[rvcd]['PA']*ct.loc['UA'][rvcd]) / (ct.loc[rvcd]['PA']+ct.loc['UA'][rvcd]),
         2) for rvcd in labels]
-    f1 = [0 if math.isnan(x) else x for x in f1]
     f1.append(f"avg_f1 {round(np.nanmean(f1), 2)}") # total f1
 
     # test another calculation of f1
@@ -154,8 +152,15 @@ def importance(band_desc:list, feature_importance:np.ndarray, store_to:str = Non
     for b, imp in zip(band_desc, feature_importance):
         band = b.split('_')[2]
         date = b.split('_')[1]
-        bands_importance = bands_importance._append([{band:imp}], ignore_index=True)
-        dates_importance = dates_importance._append([{date:imp}], ignore_index=True)
+        try:
+            bands_importance = bands_importance._append([{band:imp}], ignore_index=True)
+        except AttributeError:
+            bands_importance = bands_importance.append([{band:imp}], ignore_index=True)
+        try:
+            dates_importance = dates_importance._append([{date:imp}], ignore_index=True)
+        except AttributeError:
+            dates_importance = dates_importance.append([{date:imp}], ignore_index=True)
+
     
     bands_importance = bands_importance.apply(lambda x: pd.Series(x.dropna().values))
     dates_importance = dates_importance.apply(lambda x: pd.Series(x.dropna().values))
@@ -181,7 +186,7 @@ def random_forest_train(cube_path:str, gt_fpath:str, results_to:str, test_size:f
         results_to (str): Path to store results
         test_size (float, optional): Test sample size. Defaults to 0.33
         gridsearch (bool, optional): Hyperparameter Tuning using GridSearchCV. Check here: https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSearchCV.html#sklearn.model_selection.GridSearchCV. Defaults to False.
-        parameters(dict, optional): SVM parameters. Check here: https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html#sklearn.ensemble.RandomForestClassifier.
+        parameters(dict, optional): RF parameters. Check here: https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html#sklearn.ensemble.RandomForestClassifier.
     Returns:
         RandomForestClassifier: The model
     """
@@ -282,7 +287,11 @@ def random_forest_train(cube_path:str, gt_fpath:str, results_to:str, test_size:f
             logging.info(f'OOB prediction of accuracy is: {round(rf.oob_score_ * 100, 2)}%')
     
     # Cross-tabulate predictions
-    cm = pd.crosstab(df['truth'], df['predict'], margins=True)
+    truth = df['truth'].astype(int)
+    predict =df['predict'].astype(int)
+    cm = pd.crosstab(truth, predict , margins=True)
+    cm.columns = cm.columns.astype(str).tolist() 
+    cm.index = cm.index.astype(str).tolist()
     cm = fill_confMatrix(cm, labels)
     cm.to_csv(os.path.join(results_to, "Confusion_Matrix.csv"))
     
@@ -493,10 +502,12 @@ def svm_train(cube_path:str, gt_fpath:str, results_to:str, test_size:float = 0.3
         X_test = None
         gc.collect()
 
-    # Cross-tabulate predictions
-    cm = pd.crosstab(df['truth'], df['predict'], margins=True)
+    truth = df['truth'].astype(int)
+    predict =df['predict'].astype(int)
+    cm = pd.crosstab(truth, predict , margins=True)
+    cm.columns = cm.columns.astype(str).tolist() 
+    cm.index = cm.index.astype(str).tolist()
     cm = fill_confMatrix(cm, labels)
-    cm.to_csv(os.path.join(results_to, "Confusion_Matrix.csv"))
     
     logging.info("Done.")
 

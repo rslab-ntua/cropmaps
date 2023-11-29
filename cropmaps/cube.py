@@ -37,7 +37,7 @@ def generate_cube_paths(eodata:sentimeseries, bands:list, mask:str = None)->list
         
     return paths
 
-def make_cube(listOfPaths:List[str], searchPath:str, newFilename:str, dtype:np.dtype, nodata:float = -9999, gap_fill:bool = True, harmonize:bool = True, alpha:float = 0.0001, beta:float = 0., force_new:bool = False)->Tuple[List[str], Dict]:
+def make_cube(listOfPaths:List[str], searchPath:str, newFilename:str, dtype:np.dtype, nodata:float = -9999, gap_fill:bool = True, harmonize:bool = True, alpha:float = 0.0001, beta:float = 0., force_new:bool = False, compress = False)->Tuple[List[str], Dict]:
     """Stack satellite images (FROM DIFFERENT FILES) as timeseries cube, without loading them in memory.
     If there is a datetime field in filename, could enable sort=True, to sort cube layers by date, ascending.
     Also, if sort=True, dates are written at .txt file which will be saved with the same output name, as cube.
@@ -78,7 +78,10 @@ def make_cube(listOfPaths:List[str], searchPath:str, newFilename:str, dtype:np.d
         'count': len(listOfPaths),
         'driver':'GTiff',
         'nodata': nodata})
-
+    
+    if compress:
+        metadata.update({"compress": "lzw"})
+    
     # New filename.
     cubeName = os.path.join(searchPath, str(newFilename) + '.tif')
     # Stack products as timeseries cube.

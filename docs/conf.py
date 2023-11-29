@@ -25,7 +25,7 @@ copyright = '2023, Alekos Falagas'
 author = 'Alekos Falagas'
 
 # The full version, including alpha/beta/rc tags
-release = '0.0.1beta'
+release = '0.0.1a0'
 
 
 # -- General configuration ---------------------------------------------------

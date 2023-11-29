@@ -270,7 +270,7 @@ class sentinel2():
             raise ValueError("Arguments 'band' must be provided!")
         
     @staticmethod
-    def reproj_match(image:str, base:str, to_file:bool = False, outfile:str = "output.tif", resampling:rasterio.warp.Resampling = Resampling.nearest) -> None:
+    def reproj_match(image:str, base:str, to_file:bool = False, outfile:str = "output.tif", resampling:rasterio.warp.Resampling = Resampling.nearest, compress = False) -> None:
         """Reprojects/Resamples an image to a base image.
         Args:
             image (str): Path to input file to reproject/resample
@@ -292,6 +292,8 @@ class sentinel2():
                             "width": dst_width,
                             "height": dst_height,
                             })
+            if compress:
+                metadata.update({"compress": "lzw"})          
             if to_file:
                 with rasterio.open(outfile, "w", **metadata) as dst:
                     # iterate through bands and write using reproject function
@@ -344,7 +346,7 @@ class sentinel2():
 
         return mask_array
     
-    def apply_cloud_mask(self, band:str = None, store:str = None, subregion:str = None, resolution:str = None, new:str = "CLOUDMASK")->None:
+    def apply_cloud_mask(self, band:str = None, store:str = None, subregion:str = None, resolution:str = None, new:str = "CLOUDMASK", compress = False)->None:
         """Apply default SCL mask to S2 images.
 
         Args:
@@ -431,7 +433,8 @@ class sentinel2():
                     array = src.read(1)
                     array[mask==0] = nodata
                     meta.update({"nodata": nodata})
-                                        
+                    if compress:
+                        meta.update({"compress": "lzw"})                    
                     with rasterio.open(os.path.join(path, new_name), "w", **meta) as dest:
                         dest.write(array, 1)
             
@@ -511,13 +514,15 @@ class sentinel2():
                 array = src.read(1)
                 array[mask==0] = nodata
                 meta.update({"nodata": nodata})
-                                        
+                if compress:
+                    meta.update({"compress": "lzw"})                    
+                  
                 with rasterio.open(os.path.join(path, new_name), "w", **meta) as dest:
                     dest.write(array, 1)
             
             getattr(self, band)[str(res)][subregion] = os.path.join(path, new_name)
 
-    def calcVI(self, index, store = None, subregion = None, verbose:bool = False):
+    def calcVI(self, index, store = None, subregion = None, verbose:bool = False, compress = False):
         """Calculates a selected vegetation index (NDVI, NDBI, NDWI).
         Args:
             index (str): Vegetation index to be calculated and saved. Currently only NDVI, NDBI, NDWI are supported
@@ -568,6 +573,9 @@ class sentinel2():
                     path = self.datapath_10
                     metadata = red.meta.copy()
                     metadata.update({"driver": driver, "dtype": ndvi_array.dtype, "nodata": -9999.})
+                    if compress:
+                        metadata.update({"compress": "lzw"})                    
+
                     self.writeResults(path, new_name, ndvi_array, metadata)
                     # Setting NDVI attribute to S2 image
                     setattr(self, '{}'.format(index), {self.setResolution(index): {region : os.path.join(self.datapath_10, new_name)}})
@@ -604,6 +612,9 @@ class sentinel2():
                     path = store
                     metadata = red.meta.copy()
                     metadata.update({"driver": driver, "dtype": ndvi_array.dtype, "nodata": -9999.})
+                    if compress:
+                        metadata.update({"compress": "lzw"})                    
+
                     self.writeResults(path, new_name, ndvi_array, metadata)
                     # Setting NDVI attribute to S2 image
                     setattr(self, '{}'.format(index), {self.setResolution(index): {region : os.path.join(path, new_name)}})
@@ -643,6 +654,8 @@ class sentinel2():
                     path = self.datapath_10
                     metadata = green.meta.copy()
                     metadata.update({"driver": driver, "dtype": ndwi_array.dtype, "nodata": -9999.})
+                    if compress:            
+                        metadata.update({"compress": "lzw"})                    
                     self.writeResults(path, new_name, ndwi_array, metadata)
                     setattr(self, '{}'.format(index), {self.setResolution(index): {region : os.path.join(self.datapath_10, new_name)}})
             else:
@@ -678,6 +691,8 @@ class sentinel2():
                     ndwi_array[green_array == green.meta["nodata"]] = -9999.
                     metadata = green.meta.copy()
                     metadata.update({"driver": driver, "dtype": ndwi_array.dtype, "nodata": -9999.})
+                    if compress:
+                        metadata.update({"compress": "lzw"})                    
                     self.writeResults(store, new_name, ndwi_array, metadata)
                     setattr(self, '{}'.format(index), {self.setResolution(index): {region : os.path.join(store, new_name)}})
 
@@ -752,6 +767,8 @@ class sentinel2():
                     ndbi_array[swir_array == swir.meta["nodata"]] = -9999.
                     metadata = swir.meta.copy()
                     metadata.update({"driver": driver, "dtype": ndbi_array.dtype, "nodata": -9999})
+                    if compress:
+                        metadata.update({"compress": "lzw"})                    
                     self.writeResults(store, new_name, ndbi_array, metadata)
                     setattr(self, '{}'.format(index), {self.setResolution(index): {region : os.path.join(store, new_name)}})
 
