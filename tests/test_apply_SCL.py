@@ -21,7 +21,7 @@ search_params = [(None, "NDWI", os.path.join(os.path.dirname(__file__), "data/eo
                  (None, None, os.path.join(os.path.dirname(__file__), "data/eodata_local"), "AOI", None, do_not_raise()),
                  (None, None, None, None, None, do_not_raise()),
                  ("./data/eodata/Sentinel-2/L2A/2018/06/27/S2A_MSIL2A_20180627T104021_N0208_R008_T31TEJ_20180627T143337.SAFE/GRANULE/L2A_T31TEJ_A015735_20180627T104837/IMG_DATA/T31TEJ_20180627T104021_B04_10m.jp2", None, None, None, None, pytest.raises(TypeError)),
-                 (None, "NDBI", os.path.join(os.path.dirname(__file__), "/data/eodata_local"), "AOI", "highest", pytest.raises(BandNotFound)),
+                 (None, "NDBI", os.path.join(os.path.dirname(__file__), "data/eodata_local"), "AOI", "highest", pytest.raises(BandNotFound)),
                 ]
 
 @pytest.mark.parametrize("image, band, store, subregion, resolution, exception", search_params)
