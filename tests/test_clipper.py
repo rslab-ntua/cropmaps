@@ -4,35 +4,34 @@ import pytest
 from contextlib import suppress as do_not_raise
 from cropmaps.sts import sentimeseries
 
-for directory, _, _ in os.walk("./data"):
+for directory, _, _ in os.walk(os.path.join(os.path.dirname(__file__), "data")):
     for file in os.listdir(directory):
         if file.endswith(".tif"):
             os.remove(os.path.join(directory, file))
         if file.endswith(".tif.aux.xml"):
             os.remove(os.path.join(directory, file))
 
-
-if not os.path.exists("./data/eodata_local"):
-    os.makedirs("./data/eodata_local")
+if not os.path.exists(os.path.join(os.path.dirname(__file__), "data/eodata_local")):
+    os.makedirs(os.path.join(os.path.dirname(__file__), "data/eodata_local"))
 
 eodata = sentimeseries("S2-timeseries")
-eodata.find("./data/eodata")
+eodata.find(os.path.join(os.path.dirname(__file__), "data/eodata"))
 image = eodata.data[0]
 
-search_params = [("./data/AOI/AOI.geojson", False, "B08", False, None, None, "./data/eodata_local", True, do_not_raise()),
-                 ("./data/AOI/AOI.geojson", False, "B08", False, None, None, None, True, do_not_raise()),
-                 ("./data/AOI/AOI.geojson", False, "B8A", True, None, None, None, True, do_not_raise()),
-                 ("./data/AOI/AOI.geojson", True, "B8A", True, None, None, None, True, do_not_raise()),
-                 ("./data/AOI/AOI.geojson", False, None, True, None, None, None, True, do_not_raise()),
-                 ("./data/AOI/AOI.geojson", False, "B8A", False, None, None, None, True, do_not_raise()),
-                 ("./data/AOI/AOI.geojson", False, None, True, None, None, "./data/eodata_local", True, do_not_raise()),
+search_params = [(os.path.join(os.path.dirname(__file__), "data/AOI/AOI.geojson"), False, "B08", False, None, None, os.path.join(os.path.dirname(__file__), "data/eodata_local"), True, do_not_raise()),
+                 (os.path.join(os.path.dirname(__file__), "data/AOI/AOI.geojson"), False, "B08", False, None, None, None, True, do_not_raise()),
+                 (os.path.join(os.path.dirname(__file__), "data/AOI/AOI.geojson"), False, "B8A", True, None, None, None, True, do_not_raise()),
+                 (os.path.join(os.path.dirname(__file__), "data/AOI/AOI.geojson"), True, "B8A", True, None, None, None, True, do_not_raise()),
+                 (os.path.join(os.path.dirname(__file__), "data/AOI/AOI.geojson"), False, None, True, None, None, None, True, do_not_raise()),
+                 (os.path.join(os.path.dirname(__file__), "data/AOI/AOI.geojson"), False, "B8A", False, None, None, None, True, do_not_raise()),
+                 (os.path.join(os.path.dirname(__file__), "data/AOI/AOI.geojson"), False, None, True, None, None, os.path.join(os.path.dirname(__file__), "data/eodata_local"), True, do_not_raise()),
                 ]
 
 @pytest.mark.parametrize("shapefile, series, band, resize, method, new, store, force_update, exception", search_params)
 def test_clip_by_mask(shapefile, series, band, resize, method, new, store, force_update, exception):
     with exception:
         eodata = sentimeseries("S2-timeseries")
-        eodata.find("./data/eodata")
+        eodata.find(os.path.join(os.path.dirname(__file__), "data/eodata"))
         if series:
             eodata.clipbyMask(shapefile, None, band, resize, method, new, store, force_update)
             for im in eodata.data:

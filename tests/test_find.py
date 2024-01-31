@@ -4,13 +4,13 @@ from contextlib import suppress as do_not_raise
 from cropmaps.sts import sentimeseries
 from cropmaps.exceptions import NoDataError
 
-if not os.path.exists("./data/eodata_local"):
-    os.makedirs("./data/eodata_local")
+if not os.path.exists(os.path.join(os.path.dirname(__file__), "data/eodata_local")):
+    os.makedirs(os.path.join(os.path.dirname(__file__), "data/eodata_local"))
     
 # Test cropmaps.sts.sentimeseries.find()
 
-search_params = [("./data/eodata", "L2A", do_not_raise()),
-                ("./data/eodata", "L1C", pytest.raises(NoDataError))
+search_params = [(os.path.join(os.path.dirname(__file__), "data/eodata"), "L2A", do_not_raise()),
+                (os.path.join(os.path.dirname(__file__), "data/eodata"), "L1C", pytest.raises(NoDataError))
                 ]
 
 @pytest.mark.parametrize("search, level, exception", search_params)
@@ -45,14 +45,14 @@ def local_DIAS_path_creator(image):
 
 # Get data
 eodata = sentimeseries("S2-timeseries")
-eodata.find("./data/eodata")
+eodata.find(os.path.join(os.path.dirname(__file__), "data/eodata"))
 eodata.sort_images(date=True)
 
 creodias_paths = []
 for image in eodata.data:
     src = os.path.join(image.path, image.name)
     DIAS_path = local_DIAS_path_creator(image)
-    creodias_paths.append(os.path.join("./data/eodata", DIAS_path, image.name))
+    creodias_paths.append(os.path.join(os.path.dirname(__file__), "data/eodata", DIAS_path, image.name))
 
 search_params = [(creodias_paths, do_not_raise()),
                 ([], pytest.raises(NoDataError))

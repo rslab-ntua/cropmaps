@@ -4,15 +4,22 @@ from cropmaps.sts import sentimeseries
 from cropmaps.exceptions import MinMaxCloudBoundError, MinMaxDateError
 import os
 
-if not os.path.exists("./data/eodata_local"):
-    os.makedirs("./data/eodata_local")
+for directory, _, _ in os.walk(os.path.join(os.path.dirname(__file__), "data")):
+    for file in os.listdir(directory):
+        if file.endswith(".tif"):
+            os.remove(os.path.join(directory, file))
+        if file.endswith(".tif.aux.xml"):
+            os.remove(os.path.join(directory, file))
+
+if not os.path.exists(os.path.join(os.path.dirname(__file__), "data/eodata_local")):
+    os.makedirs(os.path.join(os.path.dirname(__file__), "data/eodata_local"))
 
 # Test cropmaps.ts.remove_cloudy()
 
-search_params = [("./data/eodata", 5, 0, do_not_raise()),
-                 ("./data/eodata", "5", 0, pytest.raises(TypeError)),
-                 ("./data/eodata", 5, "0", pytest.raises(TypeError)),
-                 ("./data/eodata", 0, 5, pytest.raises(MinMaxCloudBoundError)),
+search_params = [(os.path.join(os.path.dirname(__file__), "data/eodata"), 5, 0, do_not_raise()),
+                 (os.path.join(os.path.dirname(__file__), "data/eodata"), "5", 0, pytest.raises(TypeError)),
+                 (os.path.join(os.path.dirname(__file__), "data/eodata"), 5, "0", pytest.raises(TypeError)),
+                 (os.path.join(os.path.dirname(__file__), "data/eodata"), 0, 5, pytest.raises(MinMaxCloudBoundError)),
                 ]
 
 @pytest.mark.parametrize("search, max_cloud, min_cloud, exception", search_params)
@@ -28,10 +35,10 @@ def test_remove_cloudy(search, max_cloud, min_cloud, exception):
 
 # Test cropmaps.ts.keep_timerange()
 
-search_params = [("./data/eodata", "104100", "104400", do_not_raise()),
-                 ("./data/eodata", 104100, "104400", pytest.raises(TypeError)),
-                 ("./data/eodata", "104100", 104400, pytest.raises(TypeError)),
-                 ("./data/eodata", "104400", "104100", pytest.raises(ValueError))
+search_params = [(os.path.join(os.path.dirname(__file__), "data/eodata"), "104100", "104400", do_not_raise()),
+                 (os.path.join(os.path.dirname(__file__), "data/eodata"), 104100, "104400", pytest.raises(TypeError)),
+                 (os.path.join(os.path.dirname(__file__), "data/eodata"), "104100", 104400, pytest.raises(TypeError)),
+                 (os.path.join(os.path.dirname(__file__), "data/eodata"), "104400", "104100", pytest.raises(ValueError))
                 ]
 
 @pytest.mark.parametrize("search, start_time, end_time, exception", search_params)
@@ -46,14 +53,14 @@ def test_keep_timerange(search, start_time, end_time, exception):
 
 # Test cropmaps.ts.remove_date()
 
-search_params = [("./data/eodata", "23012017", do_not_raise()),
-                 ("./data/eodata", "23012018", do_not_raise()),
-                 ("./data/eodata", "230120188", pytest.raises(ValueError)),
-                 ("./data/eodata", ["23012018", "28012018"], do_not_raise()),
-                 ("./data/eodata", ["23012018", "28012018","28012017"], do_not_raise()),
-                 ("./data/eodata", ["23012018", "28012018","280120177"], pytest.raises(ValueError)),
-                 ("./data/eodata", 23012018, pytest.raises(TypeError)),
-                 ("./data/eodata", [23012018], pytest.raises(TypeError))
+search_params = [(os.path.join(os.path.dirname(__file__), "data/eodata"), "23012017", do_not_raise()),
+                 (os.path.join(os.path.dirname(__file__), "data/eodata"), "23012018", do_not_raise()),
+                 (os.path.join(os.path.dirname(__file__), "data/eodata"), "230120188", pytest.raises(ValueError)),
+                 (os.path.join(os.path.dirname(__file__), "data/eodata"), ["23012018", "28012018"], do_not_raise()),
+                 (os.path.join(os.path.dirname(__file__), "data/eodata"), ["23012018", "28012018","28012017"], do_not_raise()),
+                 (os.path.join(os.path.dirname(__file__), "data/eodata"), ["23012018", "28012018","280120177"], pytest.raises(ValueError)),
+                 (os.path.join(os.path.dirname(__file__), "data/eodata"), 23012018, pytest.raises(TypeError)),
+                 (os.path.join(os.path.dirname(__file__), "data/eodata"), [23012018], pytest.raises(TypeError))
                 ]
 
 @pytest.mark.parametrize("search, date, exception", search_params)
@@ -68,12 +75,12 @@ def test_keep_timerange(search, date, exception):
 
 # Test cropmaps.ts.filter_dates()
             
-search_params = [("./data/eodata", 23012017, None, pytest.raises(TypeError)),
-                 ("./data/eodata", "231020181", None, pytest.raises(ValueError)),
-                 ("./data/eodata", "01102018", None, do_not_raise()),
-                 ("./data/eodata", "01102018", 23012017, pytest.raises(TypeError)),
-                 ("./data/eodata", "01102018", "230120171", pytest.raises(ValueError)),
-                 ("./data/eodata", "01102018", "01042018", do_not_raise()),
+search_params = [(os.path.join(os.path.dirname(__file__), "data/eodata"), 23012017, None, pytest.raises(TypeError)),
+                 (os.path.join(os.path.dirname(__file__), "data/eodata"), "231020181", None, pytest.raises(ValueError)),
+                 (os.path.join(os.path.dirname(__file__), "data/eodata"), "01102018", None, do_not_raise()),
+                 (os.path.join(os.path.dirname(__file__), "data/eodata"), "01102018", 23012017, pytest.raises(TypeError)),
+                 (os.path.join(os.path.dirname(__file__), "data/eodata"), "01102018", "230120171", pytest.raises(ValueError)),
+                 (os.path.join(os.path.dirname(__file__), "data/eodata"), "01102018", "01042018", do_not_raise()),
                 ]
 
 @pytest.mark.parametrize("search, max_date, min_date, exception", search_params)
@@ -88,11 +95,11 @@ def test_filter_dates(search, max_date, min_date, exception):
 
 # Test cropmaps.ts.sort_images()
 
-search_params = [("./data/eodata", "True", True, pytest.raises(TypeError)),
-                 ("./data/eodata", True, "True", pytest.raises(TypeError)),
-                 ("./data/eodata", False, False, do_not_raise()),
-                 ("./data/eodata", True, False, do_not_raise()),
-                 ("./data/eodata", False, True, do_not_raise()),
+search_params = [(os.path.join(os.path.dirname(__file__), "data/eodata"), "True", True, pytest.raises(TypeError)),
+                 (os.path.join(os.path.dirname(__file__), "data/eodata"), True, "True", pytest.raises(TypeError)),
+                 (os.path.join(os.path.dirname(__file__), "data/eodata"), False, False, do_not_raise()),
+                 (os.path.join(os.path.dirname(__file__), "data/eodata"), True, False, do_not_raise()),
+                 (os.path.join(os.path.dirname(__file__), "data/eodata"), False, True, do_not_raise()),
                 ]
 
 @pytest.mark.parametrize("search, cloud_coverage, date, exception", search_params)

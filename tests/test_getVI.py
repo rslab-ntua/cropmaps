@@ -4,23 +4,22 @@ from contextlib import suppress as do_not_raise
 from cropmaps.sts import sentimeseries
 import rasterio
 
-for directory, _, _ in os.walk("./data"):
+for directory, _, _ in os.walk(os.path.join(os.path.dirname(__file__), "data")):
     for file in os.listdir(directory):
         if file.endswith(".tif"):
             os.remove(os.path.join(directory, file))
         if file.endswith(".tif.aux.xml"):
             os.remove(os.path.join(directory, file))
 
+if not os.path.exists(os.path.join(os.path.dirname(__file__), "data/eodata_local")):
+    os.makedirs(os.path.join(os.path.dirname(__file__), "data/eodata_local"))
 
-if not os.path.exists("./data/eodata_local"):
-    os.makedirs("./data/eodata_local")
-
-search_params = [("NDVI", "./data/eodata_local", None, "AOI", False, do_not_raise()),
-                 ("NDWI", "./data/eodata_local", None, "AOI", False, do_not_raise()),
-                 ("NDBI", "./data/eodata_local", None, "AOI", False, do_not_raise()),
-                 ("NDVI", "./data/eodata_local", None, None, False, do_not_raise()),
-                 ("NDWI", "./data/eodata_local", None, None, False, do_not_raise()),
-                 ("NDBI", "./data/eodata_local", None, None, False, do_not_raise()),
+search_params = [("NDVI", os.path.join(os.path.dirname(__file__), "data/eodata_local"), None, "AOI", False, do_not_raise()),
+                 ("NDWI", os.path.join(os.path.dirname(__file__), "data/eodata_local"), None, "AOI", False, do_not_raise()),
+                 ("NDBI", os.path.join(os.path.dirname(__file__), "data/eodata_local"), None, "AOI", False, do_not_raise()),
+                 ("NDVI", os.path.join(os.path.dirname(__file__), "data/eodata_local"), None, None, False, do_not_raise()),
+                 ("NDWI", os.path.join(os.path.dirname(__file__), "data/eodata_local"), None, None, False, do_not_raise()),
+                 ("NDBI", os.path.join(os.path.dirname(__file__), "data/eodata_local"), None, None, False, do_not_raise()),
                  ("NDVI", None, None, None, False, do_not_raise()),
                  ("NDWI", None, None, None, False, do_not_raise()),
                  ("NDBI", None, None, None, False, do_not_raise()),
@@ -33,9 +32,9 @@ search_params = [("NDVI", "./data/eodata_local", None, "AOI", False, do_not_rais
 def test_getVI(index, store, image, subregion, verbose, exception):
     with exception:
         eodata = sentimeseries("S2-timeseries")
-        eodata.find("./data/eodata")
-        eodata.clipbyMask("./data/AOI/AOI.geojson", store = "./data/eodata_local")
-        eodata.clipbyMask("./data/AOI/AOI.geojson")
+        eodata.find(os.path.join(os.path.dirname(__file__), "data/eodata"))
+        eodata.clipbyMask(os.path.join(os.path.dirname(__file__), "data/AOI/AOI.geojson"), store = os.path.join(os.path.dirname(__file__), "data/eodata_local"))
+        eodata.clipbyMask(os.path.join(os.path.dirname(__file__), "data/AOI/AOI.geojson"))
         eodata.getVI(index, store, image, subregion, verbose)
         if subregion is None:
             level = "raw"
