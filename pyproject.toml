@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = []
+
+[project]
+name = "cropmaps"
+version = "0.0.1a0"
+description = "MAGO cropmaps package is an open source Python toolbox for crop type mapping from Sentinel-2 L2A multispectral satellite data using two well known machine learning algorithms; SVM and Random Forest."
+readme = {file = "README.md", content-type='text/markdown'}
+license = {text = "GPL3"}
+authors = [{name = "Alekos Falagas", email = "alek.falagas@gmail.com"},]
+maintainers = [{name = "Alekos Falagas", email = "alek.falagas@gmail.com"}]
+
+classifiers = [
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering :: GIS",]
+
+requires-python = ">=3.6"
+dependencies = [
+    "wheel",
+    "creodias_finder@git+https://github.com/DHI-GRAS/creodias-finder",
+    "pandas",
+    "pyarrow",
+    "sentinelsat",
+    "geopandas",
+    "rasterio",
+    "scikit-learn",
+    "coloredlogs",
+]
+
+[project.optional-dependencies]
+docs = [
+    "sphinx",
+    "sphinxcontrib-apidoc",
+    "sphinxcontrib-napoleon",
+    "sphinx_rtd_theme",
+    "myst_parser",
+    "sphinxemoji"
+]
+
+dev = [
+    "pytest",
+    "pytest-cov",
+    "pytest-dependency",
+    "pytest-mock",
+]

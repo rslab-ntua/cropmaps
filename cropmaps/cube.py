@@ -26,9 +26,6 @@ def generate_cube_paths(eodata:sentimeseries, bands:list, mask:str = None)->list
     if mask is None:
         for image in eodata.data:
             for band in bands:
-                #if int(image.setResolution(band)) == 20:
-                #    paths.append(getattr(image, band)["10"]["UPSAMPLED"])
-                #else:
                 paths.append(getattr(image, band)["10"]["raw"])
     else:
         for image in eodata.data:

@@ -189,7 +189,7 @@ class sentinel2():
                 dst.write(array)
 
     def upsample(self, band = None, store = None, new = None, subregion = None, method = None, ext = 'tif'):
-        """Upsample 
+        """Upsample 20 meters spatial resolution bands to 10 meters.
 
         Args:
             store (str, optional): Path to store data. If None then stores the results to default image path. Defaults to None
@@ -225,16 +225,22 @@ class sentinel2():
                         else:
                             res = 10
                             path = store
+                else:
+                    logging.warning("File {} already in highest resolution...".format(getattr(self, band)[self.setResolution(band)][region]))
+                    return
                 
                 if new is None:
                     new = str(res) + "_Upsampled"
-                    
-                # New name for output image
-                out_tif = os.path.join(path, "T{}_{}_{}_{}.{}".format(self.tile_id, self.str_datetime, band, new, ext))
+
+                if subregion is None:    
+                    # New name for output image
+                    out_tif = os.path.join(path, "T{}_{}_{}_{}.{}".format(self.tile_id, self.str_datetime, band, new, ext))
+                else:
+                    out_tif = os.path.join(path, "T{}_{}_{}_{}_{}.{}".format(self.tile_id, self.str_datetime, band, region, new, ext))
 
                 if os.path.exists(out_tif) == True and os.stat(out_tif).st_size != 0:
                     # Pass if file already exists & it's size is not zero
-                    logging.warning("File {} already exists...".format(os.path.join(path, "T{}_{}_{}_{}.{}".format(self.tile_id, self.str_datetime, band, new, ext))))
+                    logging.warning("File {} already exists...".format(out_tif))
                     try:
                         getattr(self, band)[str(res)][region] = out_tif
                     except KeyError:
@@ -257,7 +263,7 @@ class sentinel2():
                     raise BandNotFound("No high resolution band found!")
 
                 fpath = getattr(self, band)[str(resolution)][region]
-                self.reproj_match(os.path.join(path, fpath), hr_band, to_file = True, outfile = out_tif, resampling = resampling)
+                self.reproj_match(fpath, hr_band, to_file = True, outfile = out_tif, resampling = resampling)
 
                 try:
                     getattr(self, band)[str(res)][region] = out_tif
@@ -267,7 +273,7 @@ class sentinel2():
             else:
                 raise BandNotFound("Object {} has no attribute {} (band).".format(self, band))
         else:
-            raise ValueError("Arguments 'band' must be provided!")
+            raise ValueError("Argument 'band' must be provided!")
         
     @staticmethod
     def reproj_match(image:str, base:str, to_file:bool = False, outfile:str = "output.tif", resampling:rasterio.warp.Resampling = Resampling.nearest, compress = False) -> None:
@@ -416,9 +422,9 @@ class sentinel2():
                             continue
 
                     if hasattr(self, 'SCL'):
-                        if res in self.SCL:
+                        try:
                             SCL = self.SCL[res][subregion]
-                        else:
+                        except KeyError:
                             if subregion == "raw":
                                 self.upsample(store = store, band = "SCL")
                             else:    
@@ -426,10 +432,9 @@ class sentinel2():
                             SCL = self.SCL[res][subregion]
                     else:
                         raise BandNotFound("SCL band is missing!")
-
                     SCL_data = rasterio.open(SCL)
                     mask = self._cloud_mask(SCL_data)                 
-                
+                    
                     array = src.read(1)
                     array[mask==0] = nodata
                     meta.update({"nodata": nodata})
@@ -447,7 +452,7 @@ class sentinel2():
             if resolution == "highest":
                 res = "10"
             else:
-                res = self.setResolution(b)
+                res = self.setResolution(band)
 
             if store is None:
                 if hasattr(self, 'datapath'):
@@ -507,7 +512,7 @@ class sentinel2():
                             SCL = self.SCL[res][subregion]
                 else:
                     raise BandNotFound("SCL band is missing!")
-
+                
                 SCL_data = rasterio.open(SCL)
                 mask = self._cloud_mask(SCL_data)                 
                 
@@ -543,7 +548,12 @@ class sentinel2():
                 if os.path.isfile(os.path.join(self.datapath_10, new_name)):
                     logging.warning("File {} already exists...".format(os.path.join(self.datapath_10, new_name)))
                     if not hasattr(self, index):
-                        setattr(self, '{}'.format(index), {self.setResolution(index): {region : os.path.join(self.datapath_10, new_name)}})
+                        setattr(self, index, {self.setResolution(index): {region: os.path.join(self.datapath_10, new_name)}})
+                    else:
+                        try:
+                            getattr(self, index)[self.setResolution(index)][region] = os.path.join(store, new_name)
+                        except KeyError:
+                            getattr(self, index).update({self.setResolution(index): {region: os.path.join(self.datapath_10, new_name)}})                    
                     return
                 else:
                     if hasattr(self, "B08"):
@@ -578,12 +588,23 @@ class sentinel2():
 
                     self.writeResults(path, new_name, ndvi_array, metadata)
                     # Setting NDVI attribute to S2 image
-                    setattr(self, '{}'.format(index), {self.setResolution(index): {region : os.path.join(self.datapath_10, new_name)}})
+                    if not hasattr(self, index):
+                        setattr(self, index, {self.setResolution(index): {region: os.path.join(self.datapath_10, new_name)}})
+                    else:
+                        try:
+                            getattr(self, index)[self.setResolution(index)][region] = os.path.join(self.datapath_10, new_name)
+                        except KeyError:
+                            getattr(self, index).update({self.setResolution(index): {region: os.path.join(self.datapath_10, new_name)}})   
             else:
                 if os.path.isfile(os.path.join(store, new_name)):
                     logging.warning("File {} already exists...".format(os.path.join(store, new_name)))
                     if not hasattr(self, index):
-                        setattr(self, '{}'.format(index), {self.setResolution(index): {region : os.path.join(store, new_name)}})
+                        setattr(self, index, {self.setResolution(index): {region: os.path.join(store, new_name)}})
+                    else:
+                        try:
+                            getattr(self, index)[self.setResolution(index)][region] = os.path.join(store, new_name)
+                        except KeyError:
+                            getattr(self, index).update({self.setResolution(index): {region: os.path.join(store, new_name)}})                    
                     return
                 else:
                     if hasattr(self, "B08"):
@@ -617,14 +638,24 @@ class sentinel2():
 
                     self.writeResults(path, new_name, ndvi_array, metadata)
                     # Setting NDVI attribute to S2 image
-                    setattr(self, '{}'.format(index), {self.setResolution(index): {region : os.path.join(path, new_name)}})
-
+                    if not hasattr(self, index):
+                        setattr(self, index, {self.setResolution(index): {region: os.path.join(store, new_name)}})
+                    else:
+                        try:
+                            getattr(self, index)[self.setResolution(index)][region] = os.path.join(store, new_name)
+                        except KeyError:
+                            getattr(self, index).update({self.setResolution(index): {region: os.path.join(store, new_name)}})
         elif index == 'NDWI':
             if store == None:
                 if os.path.isfile(os.path.join(self.datapath_10, new_name)):
                     logging.warning("File {} already exists...".format(os.path.join(self.datapath_10, new_name)))
                     if not hasattr(self, index):
-                        setattr(self, '{}'.format(index), {self.setResolution(index): {region : os.path.join(self.datapath_10, new_name)}})
+                        setattr(self, index, {self.setResolution(index): {region: os.path.join(self.datapath_10, new_name)}})
+                    else:
+                        try:
+                            getattr(self, index)[self.setResolution(index)][region] = os.path.join(self.datapath_10, new_name)
+                        except KeyError:
+                            getattr(self, index).update({self.setResolution(index): {region: os.path.join(self.datapath_10, new_name)}})                    
                     return
                 else:
                     if hasattr(self, "B08"):
@@ -657,12 +688,23 @@ class sentinel2():
                     if compress:            
                         metadata.update({"compress": "lzw"})                    
                     self.writeResults(path, new_name, ndwi_array, metadata)
-                    setattr(self, '{}'.format(index), {self.setResolution(index): {region : os.path.join(self.datapath_10, new_name)}})
+                    if not hasattr(self, index):
+                        setattr(self, index, {self.setResolution(index): {region: os.path.join(self.datapath_10, new_name)}})
+                    else:
+                        try:
+                            getattr(self, index)[self.setResolution(index)][region] = os.path.join(self.datapath_10, new_name)
+                        except KeyError:
+                            getattr(self, index).update({self.setResolution(index): {region: os.path.join(self.datapath_10, new_name)}})
             else:
                 if os.path.isfile(os.path.join(store, new_name)):
                     logging.warning("File {} already exists...".format(os.path.join(store, new_name)))
                     if not hasattr(self, index):
-                        setattr(self, '{}'.format(index), {self.setResolution(index): {region : os.path.join(store, new_name)}})
+                        setattr(self, index, {self.setResolution(index): {region: os.path.join(store, new_name)}})
+                    else:
+                        try:
+                            getattr(self, index)[self.setResolution(index)][region] = os.path.join(store, new_name)
+                        except KeyError:
+                            getattr(self, index).update({self.setResolution(index): {region: os.path.join(store, new_name)}})                    
                     return
                 else:
                     if hasattr(self, "B08"):
@@ -673,7 +715,7 @@ class sentinel2():
                     else:
                         raise BandNotFound("{} object has no attribute B08 (Image: {})".format(self, self.name))
                     
-                    if hasattr(self, "B04"):
+                    if hasattr(self, "B03"):
                         if self.B03.get("10").get(region) != None:
                             green = rasterio.open(self.B03["10"][region])
                         else:
@@ -694,14 +736,24 @@ class sentinel2():
                     if compress:
                         metadata.update({"compress": "lzw"})                    
                     self.writeResults(store, new_name, ndwi_array, metadata)
-                    setattr(self, '{}'.format(index), {self.setResolution(index): {region : os.path.join(store, new_name)}})
-
+                    if not hasattr(self, index):
+                        setattr(self, index, {self.setResolution(index): {region: os.path.join(store, new_name)}})
+                    else:
+                        try:
+                            getattr(self, index)[self.setResolution(index)][region] = os.path.join(store, new_name)
+                        except KeyError:
+                            getattr(self, index).update({self.setResolution(index): {region: os.path.join(store, new_name)}})                    
         elif index == 'NDBI':
             if store == None:
                 if os.path.isfile(os.path.join(self.datapath_20, new_name)):
                     logging.warning("File {} already exists...".format(os.path.join(self.datapath_20, new_name)))
                     if not hasattr(self, index):
-                        setattr(self, '{}'.format(index), {self.setResolution(index): {region : os.path.join(self.datapath_20, new_name)}})
+                        setattr(self, index, {self.setResolution(index): {region: os.path.join(self.datapath_20, new_name)}})
+                    else:
+                        try:
+                            getattr(self, index)[self.setResolution(index)][region] = os.path.join(self.datapath_20, new_name)
+                        except KeyError:
+                            getattr(self, index).update({self.setResolution(index): {region: os.path.join(self.datapath_20, new_name)}})                    
                     return
                 else:
                     if hasattr(self, "B11"):
@@ -724,6 +776,7 @@ class sentinel2():
                         logging.info("Calculating {} for image {}...".format(index, self.name))
                     
                     nir_array, _ = self.reproj_match(self.B08["10"][region], self.B11["20"][region])
+                    nir_array = nir_array.astype(rasterio.float32)
                     swir_array = swir.read().astype(rasterio.float32)
                     ndbi_array = vi.ndbi(swir_array, nir_array)
                     ndbi_array[nir_array == nir.meta["nodata"]] = -9999.
@@ -732,12 +785,23 @@ class sentinel2():
                     metadata = swir.meta.copy()
                     metadata.update({"driver": driver, "dtype": ndbi_array.dtype, "nodata": -9999})
                     self.writeResults(path, new_name, ndbi_array, metadata)
-                    setattr(self, '{}'.format(index), {self.setResolution(index): {region : os.path.join(self.datapath_20, new_name)}})
+                    if not hasattr(self, index):
+                        setattr(self, index, {self.setResolution(index): {region: os.path.join(self.datapath_20, new_name)}})
+                    else:
+                        try:
+                            getattr(self, index)[self.setResolution(index)][region] = os.path.join(self.datapath_20, new_name)
+                        except KeyError:
+                            getattr(self, index).update({self.setResolution(index): {region: os.path.join(self.datapath_20, new_name)}})  
             else:
                 if os.path.isfile(os.path.join(store, new_name)):
                     logging.warning("File {} already exists...".format(os.path.join(store, new_name)))
                     if not hasattr(self, index):
-                        setattr(self, '{}'.format(index), {self.setResolution(index): {region : os.path.join(store, new_name)}})
+                        setattr(self, index, {self.setResolution(index): {region: os.path.join(store, new_name)}})
+                    else:
+                        try:
+                            getattr(self, index)[self.setResolution(index)][region] = os.path.join(store, new_name)
+                        except KeyError:
+                            getattr(self, index).update({self.setResolution(index): {region: os.path.join(store, new_name)}})                    
                     return
                 else:
                     if hasattr(self, "B11"):
@@ -770,7 +834,13 @@ class sentinel2():
                     if compress:
                         metadata.update({"compress": "lzw"})                    
                     self.writeResults(store, new_name, ndbi_array, metadata)
-                    setattr(self, '{}'.format(index), {self.setResolution(index): {region : os.path.join(store, new_name)}})
+                    if not hasattr(self, index):
+                        setattr(self, index, {self.setResolution(index): {region: os.path.join(store, new_name)}})
+                    else:
+                        try:
+                            getattr(self, index)[self.setResolution(index)][region] = os.path.join(store, new_name)
+                        except KeyError:
+                            getattr(self, index).update({self.setResolution(index): {region: os.path.join(store, new_name)}})  
 
         else:
             VegetationIndexNotInList(f"Index {index} not in list of available indexes.")            

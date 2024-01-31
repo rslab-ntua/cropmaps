@@ -17,7 +17,7 @@ logging = logger.setup(name = __name__)
 class Clipper():
 
     @staticmethod
-    def clipByMask(image, shapefile, store = None, band = None, new = None, resize = False, method = None, ext = 'tif', verbose = False, compress = False):
+    def clipByMask(image, shapefile, store = None, band = None, new = None, resize = False, method = None, ext = 'tif', verbose = False, compress = False, force_update = False):
         """Mask image based on a shapefile mask.
         
         Args:
@@ -86,16 +86,17 @@ class Clipper():
                 # New name for output image
                 out_tif = os.path.join(path, "T{}_{}_{}_{}.{}".format(image.tile_id, image.str_datetime, band, new, ext))
 
-                if os.path.exists(out_tif) == True and os.stat(out_tif).st_size != 0:
-                    # Pass if file already exists & it's size is not zero
-                    logging.warning("File {} already exists...".format(os.path.join(path, "T{}_{}_{}_{}.{}".format(image.tile_id, image.str_datetime, band, new, ext))))
-                    attr_name = os.path.splitext(os.path.basename(shapefile))[0]
-                    try:
-                        getattr(image, band)[str(res)][attr_name] = out_tif
-                    except KeyError:
-                        getattr(image, band).update({str(res): {attr_name: out_tif}})    
-                    
-                    return
+                if not force_update:
+                    if os.path.exists(out_tif) == True and os.stat(out_tif).st_size != 0:
+                        # Pass if file already exists & it's size is not zero
+                        logging.warning("File {} already exists...".format(os.path.join(path, "T{}_{}_{}_{}.{}".format(image.tile_id, image.str_datetime, band, new, ext))))
+                        attr_name = os.path.splitext(os.path.basename(shapefile))[0]
+                        try:
+                            getattr(image, band)[str(res)][attr_name] = out_tif
+                        except KeyError:
+                            getattr(image, band).update({str(res): {attr_name: out_tif}})    
+                        
+                        return
 
                 if verbose:
                     if int(resolution) == 20 and resize == True:
