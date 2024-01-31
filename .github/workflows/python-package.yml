@@ -38,9 +38,9 @@ jobs:
       run: |
         if [ ${{ github.event_name }} == 'push' ]; then
             # Run with sudo to delete create files
-            sudo pytest --cov --cov-report=term --cov-report=xml
+            pytest --cov --cov-report=term --cov-report=xml
           else
-            sudo pytest
+            pytest
           fi
       
     - name: Upload coverage reports to Codecov
