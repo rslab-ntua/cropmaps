@@ -48,6 +48,10 @@ class timeseries():
         Raises:
             MinMaxCloudBoundError: Raises when maximum cloud coverage is less than the minimum coverage
         """
+        if not isinstance(max_cloud, int):
+            raise TypeError("Maximum cloud coverage must be integer.")
+        if not isinstance(min_cloud, int):
+            raise TypeError("Minimum cloud coverage limit must be integer.")
         if max_cloud < min_cloud:
             raise MinMaxCloudBoundError("Maximum cloud coverage value is less than the minimum cloud coverage value.")
         logging.info("Searching for data with cloud coverage less than {:.2f}% and more than {:.2f}%...".format(min_cloud, max_cloud))
@@ -80,9 +84,17 @@ class timeseries():
             start_time (str): Start time in HHMMSS format
             end_time (str): End time in HHMMSS format
         """
+        if len(start_time) !=6 and not isinstance(start_time, str):
+            raise TypeError("Start time must be string with length 6.")
+        if len(end_time) !=6 and not isinstance(end_time, str):
+            raise TypeError("End time must be string with length 6.")
+        
         start = datetime.datetime.strptime(start_time, "%H%M%S").time()
         end = datetime.datetime.strptime(end_time, "%H%M%S").time()
-
+        
+        if start > end:
+            raise ValueError("Start time must be earlier than end time.")
+        
         new = []
         for image in self.data:
             if start <= end:
@@ -100,7 +112,6 @@ class timeseries():
                     new.append(image)
             else:
                 if (image.datetime.time()) < start and (image.datetime.time()) > end:
-                    index = self.names.index(image.name)
                     index = self.names.index(image.name)
                     attrs = list(self.__dict__.keys())
                     for attr in attrs:
@@ -138,6 +149,8 @@ class timeseries():
                     raise ValueError("Date format is DDMMYYYY")
         else:
             for d in date:
+                if not isinstance(d, str):
+                    raise TypeError("Date must be string or a list of string!")
                 if len(d) != 8:
                     raise ValueError("Date format is DDMMYYYY")
             
@@ -282,12 +295,17 @@ class timeseries():
             cloud_coverage (bool, optional): Sort by cloud coverage. Defaults to False
             date(bool, optional): Sort by dates. Defaults to False
         """
+        if not isinstance(cloud_coverage, bool):
+            raise TypeError("Cloud coverage option must be bool.")
+        if not isinstance(date, bool):
+            raise TypeError("Date option must be bool.")
+        
         if cloud_coverage is True and date is True:
             logging.warning("Sorting works only with one option!")
             return
 
         elif cloud_coverage is True and date is False:
-            
+
             # Sort images
             zipped = zip(self.cloud_cover, self.names, self.data)
             sorted_list = sorted(zipped, key = lambda k: (k[0], k[1]))
@@ -297,16 +315,17 @@ class timeseries():
             zipped = zip(self.cloud_cover, self.names)
             sorted_list = sorted(zipped)
             self.names = [i for _, i in sorted_list]
-            
             # Sort dates
             zipped = zip(self.cloud_cover, self.names, self.dates)
             sorted_list = sorted(zipped, key = lambda k: (k[0], k[1]))
             self.dates = [i for _, _, i in sorted_list]
-            
+
             attrs = list(self.__dict__.keys())
             attrs.remove("cloud_cover")
             attrs.remove("names")
             attrs.remove("data")
+            attrs.remove("dates")
+
             for attr in attrs:
                 if isinstance(getattr(self, attr), list):
                     _l = getattr(self, attr).copy()
@@ -315,10 +334,9 @@ class timeseries():
                     l = [i for _, _, i in sorted_list]
                     setattr(self, attr, l)
                     del(l, _l)
-
+            print(self.dates)
             self.cloud_cover = sorted(self.cloud_cover)                     
 
-        
         elif cloud_coverage is False and date is True:
             # Sort images
             zipped = zip(self.dates, self.names, self.data)
@@ -339,6 +357,8 @@ class timeseries():
             attrs.remove("cloud_cover")
             attrs.remove("names")
             attrs.remove("data")
+            attrs.remove("dates")
+
             for attr in attrs:
                 if isinstance(getattr(self, attr), list):
                     _l = getattr(self, attr).copy()
@@ -366,12 +386,12 @@ class timeseries():
             sorted_list = sorted(zipped, key = lambda k: (k[0], k[1]))
             self.cloud_cover = [i for _, _, i in sorted_list]
             
-            self.cloud_cover = sorted(self.cloud_cover)   
-
             attrs = list(self.__dict__.keys())
             attrs.remove("cloud_cover")
             attrs.remove("names")
             attrs.remove("data")
+            attrs.remove("dates")
+
             for attr in attrs:
                 if isinstance(getattr(self, attr), list):
                     _l = getattr(self, attr).copy()

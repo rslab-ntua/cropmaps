@@ -27,7 +27,7 @@ class sentimeseries(timeseries):
         self.tiles = []
         self.orbits = []
 
-    def find_DIAS(self, DIAS_data:list, level:str = "L2A"):
+    def find_DIAS(self, DIAS_data:list):
         
         for d in DIAS_data:
             path, name = os.path.split(d)
@@ -75,6 +75,7 @@ class sentimeseries(timeseries):
                     self.dates.append(image.datetime)
                     self.cloud_cover.append(image.cloud_cover)
                     self.tiles.append(image.tile_id)
+                    self.orbits.append(image.orbit)
 
         if len(self.data) == 0:
             raise NoDataError("0 Sentinel-2 raw data found in the selected path.")
@@ -160,8 +161,7 @@ class sentimeseries(timeseries):
             store (str, optional): Path to store the new images. If None then the results are saved in the default S2 path. Defaults to None.
             subregion (str, optional): Apply mask to subregion. If subregion is None then applies the mask to the default raw images. Defaults to None.
             resolution (str, optional): Resolution to apply cloud mask. If None the applies to default resolution else tries to apply to the highest 10m resolution. Defaults to None.
-        """
-
+        """        
         if image is None:
             logging.info(f"Applying SCL mask for all time series...")
             if store is None:
@@ -175,6 +175,9 @@ class sentimeseries(timeseries):
                         os.makedirs(savepath)
                     im.apply_cloud_mask(subregion = subregion, band = band, store = savepath, resolution = resolution)
         else:
+            if not isinstance(image, sentinel2):
+                raise TypeError("Image must be sentinel2 object.")
+            
             if store is None:
                 image.apply_cloud_mask(subregion=subregion, band=band, resolution = resolution)
             else:
@@ -184,8 +187,7 @@ class sentimeseries(timeseries):
                     os.makedirs(savepath)
                 image.apply_cloud_mask(subregion = subregion, band = band, store = savepath, resolution = resolution)
                     
-
-    def clipbyMask(self, shapefile, image = None, band = None, resize = False, method = None, new = None, store = None):
+    def clipbyMask(self, shapefile, image = None, band = None, resize = False, method = None, new = None, store = None, force_update = False):
         """Masks an image or the complete time series with a shapefile.
         
         Args:
@@ -203,7 +205,7 @@ class sentimeseries(timeseries):
                 if store is None:
                     for im in tqdm(self.data):
                         for b in bands:
-                            Clipper.clipByMask(im, shapefile, band = b, resize = resize, method = method, new = new)
+                            Clipper.clipByMask(im, shapefile, band = b, resize = resize, method = method, new = new, force_update = force_update)
                 else:
                     for im in tqdm(self.data):
                         generated_path = self._path_generator(im)
@@ -211,42 +213,42 @@ class sentimeseries(timeseries):
                         if not os.path.exists(savepath):
                             os.makedirs(savepath)
                         for b in bands:
-                            Clipper.clipByMask(im, shapefile, store = savepath, band = b, resize = resize, method = method, new = new)
+                            Clipper.clipByMask(im, shapefile, store = savepath, band = b, resize = resize, method = method, new = new, force_update = force_update)
             else:
                 logging.info("Masking band {} for all time series with {}...".format(band, shapefile))
                 if store is None:
                     for im in tqdm(self.data):
-                        Clipper.clipByMask(im, shapefile, band = band, resize = resize, method = method, new = new)
+                        Clipper.clipByMask(im, shapefile, band = band, resize = resize, method = method, new = new, force_update = force_update)
                 else:
                     for im in tqdm(self.data):
                         generated_path = self._path_generator(im)
                         savepath = os.path.join(store, generated_path, im.name)
                         if not os.path.exists(savepath):
                             os.makedirs(savepath)
-                        Clipper.clipByMask(im, shapefile, store = savepath, band = band, resize = resize, method = method, new = new)
+                        Clipper.clipByMask(im, shapefile, store = savepath, band = band, resize = resize, method = method, new = new, force_update = force_update)
         else:
             if band is None:
                 logging.info("Masking {} with {}...".format(image, shapefile))
                 if store is None:
                     for b in bands:
-                        Clipper.clipByMask(image, shapefile, band = b, resize = resize, method = method, new = new)
+                        Clipper.clipByMask(image, shapefile, band = b, resize = resize, method = method, new = new, force_update = force_update)
                 else:
                     generated_path = self._path_generator(image)
                     savepath = os.path.join(store, generated_path, image.name)
                     if not os.path.exists(savepath):
                         os.makedirs(savepath)
                     for b in bands:
-                        Clipper.clipByMask(image, shapefile, store = savepath, band = b, resize = resize, method = method, new = new)
+                        Clipper.clipByMask(image, shapefile, store = savepath, band = b, resize = resize, method = method, new = new, force_update = force_update)
             else:
                 logging.info("Masking band {} of image {} with {}...".format(band, image, shapefile))
                 if store is None:
-                    Clipper.clipByMask(image, shapefile, band = band, resize = resize, method = method, new = new)
+                    Clipper.clipByMask(image, shapefile, band = band, resize = resize, method = method, new = new, force_update = force_update)
                 else:
                     generated_path = self._path_generator(image)
                     savepath = os.path.join(store, generated_path, image.name)
                     if not os.path.exists(savepath):
                         os.makedirs(savepath) 
-                    Clipper.clipByMask(image, shapefile, store = savepath, band = band, resize = resize, method = method, new = new)
+                    Clipper.clipByMask(image, shapefile, store = savepath, band = band, resize = resize, method = method, new = new, force_update = force_update)
 
     def remove_orbit(self, orbit):
         """Remove images with specific orbit.
@@ -351,8 +353,12 @@ class sentimeseries(timeseries):
         Returns:
             str: Path with LC data
         """
+        if not isinstance(store, str):
+            raise TypeError("Store must be a path.")
+        
         if not os.path.exists(store):
             os.makedirs(store)
+
         regions = []
         if aoi is None:
             # In this case the service will be download data for all the available tiles
@@ -362,9 +368,12 @@ class sentimeseries(timeseries):
             for tile in unique_tiles:
                 regions.append(sentinel_tiles[sentinel_tiles["Name"] == tile].iloc[0].explode().geometry)
         else:
-            data = gpd.open(aoi)
-            for row in data.iterrows():
-                regions.append(row.iloc[0].explode().geometry)
+            data = gpd.read_file(aoi)
+            for _, row in data.iterrows():
+                try:
+                    regions.append(row.iloc[0].geometry)
+                except:
+                    regions.append(row.iloc[0])
 
         for region in regions:
             tiles = worldcover(region, store)
@@ -377,8 +386,9 @@ class sentimeseries(timeseries):
 
             raster_data = []
             for r in lc_data:
-                raster = rasterio.open(os.path.join(store, r))
-                raster_data.append(raster)
+                if r.endswith("tif"):
+                    raster = rasterio.open(os.path.join(store, r))
+                    raster_data.append(raster)
 
             mosaic, output = merge(raster_data)
             output_meta = raster.meta.copy()
@@ -396,4 +406,3 @@ class sentimeseries(timeseries):
             lc_data = f"ESA_WorldCover_10m_2020_v100_{tile}_Map.tif"
 
             return os.path.join(store, lc_data)
-        
