@@ -25,7 +25,7 @@ pip install .
 <div align="center">
 <figure>
 <img src="./docs/images/flowchart.drawio.png" width = 700>
-<figcaption>Figure 1. Flowchart of the cropmaps package.</figcaption>
+<figcaption><br /> Figure 1. Flowchart of the cropmaps package.</figcaption>
 </figure>
 </div>
 
@@ -72,7 +72,7 @@ The first step in order to find all the available Sentinel-2 data is to use the 
 <div align="center">
 <figure>
 <img src="./docs/images/ESA_query.drawio.png" width = 350>
-<figcaption>Figure 2. Query to ESA servers.</figcaption>
+<figcaption><br />Figure 2. Query to ESA servers.</figcaption>
 </figure>
 </div>
 
