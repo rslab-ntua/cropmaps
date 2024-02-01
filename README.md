@@ -7,7 +7,7 @@
 
 MAGO `cropmaps` package is an open source Python toolbox for crop type mapping
 from Sentinel-2 L2A multispectral satellite data using two well known machine learning
-algorithms; SVM and Random Forest.
+algorithms; Support Vector Machine (SVM) and Random Forest (RF).
 
 ## Installation from source
 
@@ -18,7 +18,9 @@ git clone ...git && cd cropmaps/
 pip install .
 ```
 
-## Installation from PyPI :construction
+## Installation from PyPI 🚧
+
+This section is currently under construction. 🛠️
 
 ##  Quickstart
 
