@@ -1,10 +1,15 @@
 # cropmaps
 
+[![Build Status](https://github.com/rslab-ntua/cropmaps/actions/workflows/python-package.yml/badge.svg?branch=main)](https://github.com/rslab-ntua/cropmaps/actions/workflows/python-package.yml)
+[![Documentation Status](https://readthedocs.org/projects/cropmaps/badge/?version=latest)](https://cropmaps.readthedocs.io/en/latest/?badge=latest)
+[![License](https://img.shields.io/badge/License-GNU3-green.svg)](https://github.com/rslab-ntua/cropmaps)
+[![codecov](https://codecov.io/gh/rslab-ntua/cropmaps/graph/badge.svg?token=36BEKVURMG)](https://codecov.io/gh/rslab-ntua/cropmaps)
+
 MAGO `cropmaps` package is an open source Python toolbox for crop type mapping
 from Sentinel-2 L2A multispectral satellite data using two well known machine learning
-algorithms; SVM and Random Forest.
+algorithms; Support Vector Machine (SVM) and Random Forest (RF).
 
-## Installation using `pip`
+## Installation from source
 
 Use ```git``` command to get ```cropmaps``` package and then ```pip``` package manager to install the module. 
 
@@ -13,7 +18,18 @@ git clone ...git && cd cropmaps/
 pip install .
 ```
 
+## Installation from PyPI 🚧
+
+This section is currently under construction. 🛠️
+
 ##  Quickstart
+
+<div align="center">
+<figure>
+<img src="./docs/images/flowchart.drawio.png" width = 700>
+<figcaption><br /> Figure 1. Flowchart of the cropmaps package.</figcaption>
+</figure>
+</div>
 
 ### Importing Python dependencies
 
@@ -56,7 +72,10 @@ The first step in order to find all the available Sentinel-2 data is to use the 
 > :memo: User can define more variables for a more specific query. These variables can be found [here](https://scihub.copernicus.eu/twiki/do/view/SciHubUserGuide/FullTextSearch?redirectedfrom=SciHubUserGuide.3FullTextSearch).
 
 <div align="center">
+<figure>
 <img src="./docs/images/ESA_query.drawio.png" width = 350>
+<figcaption><br />Figure 2. Query to ESA servers.</figcaption>
+</figure>
 </div>
 
 Then the result from query is being tested using ```check_L2``` method since the resulted Sentinel-2 data must be in atmospherically corrected L2A.
