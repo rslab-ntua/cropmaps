@@ -22,7 +22,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Topic :: Scientific/Engineering :: GIS",]
 
-requires-python = ">=3.6"
+requires-python = ">=3.9"
 dependencies = [
     "wheel",
     "creodias_finder@git+https://github.com/DHI-GRAS/creodias-finder",

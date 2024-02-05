@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+
 import numpy as np
 # Ignoring all runtime, divided by zero numpy warnings
 np.seterr(all='ignore')
