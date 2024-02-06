@@ -551,7 +551,7 @@ class sentinel2():
                         setattr(self, index, {self.setResolution(index): {region: os.path.join(self.datapath_10, new_name)}})
                     else:
                         try:
-                            getattr(self, index)[self.setResolution(index)][region] = os.path.join(store, new_name)
+                            getattr(self, index)[self.setResolution(index)][region] = os.path.join(self.datapath_10, new_name)
                         except KeyError:
                             getattr(self, index).update({self.setResolution(index): {region: os.path.join(self.datapath_10, new_name)}})                    
                     return
